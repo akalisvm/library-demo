@@ -1,19 +1,7 @@
 # springboot-vue-project
 
-## Project setup
-```
-npm install
-```
+Front-end techs: vue3, vue-router, axios, Element Plus, ECharts.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+Backend techs: Springboot, MyBatis-Plus, Mybatis, MySQL.
 
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+This library demo project deploys at http://82.157.202.100.
