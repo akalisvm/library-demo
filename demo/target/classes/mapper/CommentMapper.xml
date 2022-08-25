@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.dao.CommentMapper">
+
+    <resultMap id="commentMap" type="com.example.demo.entity.Comment">
+        <result property="id" column="id" />
+        <result property="title" column="title" />
+        <result property="author" column="author" />
+        <result property="content" column="content" />
+        <result property="time" column="time" />
+    </resultMap>
+
+    <select id="selectThreeLatestComments" resultMap="commentMap">
+        SELECT *
+        FROM t_comment
+        ORDER BY time DESC
+        LIMIT 3;
+    </select>
+
+</mapper>

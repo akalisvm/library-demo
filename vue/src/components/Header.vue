@@ -1,18 +1,31 @@
 <template>
-  <div style="height: 50px; line-height: 50px; border-bottom: 1px solid #ccc; display: flex">
-    <div style="width: 200px; padding-left: 50px; font-weight: bold; font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif ; color: dodgerblue">
-      后台管理
+  <div style="height: 58px;
+    line-height: 50px;
+    border-bottom: 1px solid #dcdfe6;
+    display: flex;">
+    <div style="padding-top: 18px">
+      <el-breadcrumb separator-icon="ArrowRight">
+        <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
+        <template v-for="(item, index) in breadList">
+          <el-breadcrumb-item
+            v-if="item.name !== 'layout' && item.name !== 'home'"
+            :key="index"
+            :to="{ path: '/' + item.name }"
+            >{{ item.name }}</el-breadcrumb-item>
+        </template>
+      </el-breadcrumb>
     </div>
-    <div style="flex: 1"></div>
-    <div style="min-width: 200px; padding-left: 50px; padding-top: 10px">
+    <div style="flex: 1" />
+    <div style="min-width: 80px; padding-top: 10px">
       <el-dropdown>
         <el-button type="text">
-          陈天昂<el-icon class="el-icon--right"><arrow-down /></el-icon>
+          <el-avatar :src="this.user.avatar" v-if="this.user.avatar !== ''" />
+          <el-avatar :src="this.defaultAvatar" v-else />
         </el-button>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item>个人信息</el-dropdown-item>
-            <el-dropdown-item>退出系统</el-dropdown-item>
+            <el-dropdown-item @click="info">个人资料</el-dropdown-item>
+            <el-dropdown-item @click="exit">退出系统</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -22,21 +35,46 @@
 </template>
 
 <script>
+
+import request from "@/utils/request";
+
 export default {
-  name: "Header"
+  name: "Header",
+  data() {
+    return {
+      username: JSON.parse(sessionStorage.getItem("user")).username,
+      path: this.$route.path,
+      form: {},
+      user: {},
+      defaultAvatar: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+      breadList: []
+    }
+  },
+  created() {
+    let userStr = sessionStorage.getItem("user") || "{}"
+    this.user = JSON.parse(userStr)
+    request.get("/user/" + this.username).then(res => {
+      if(res.code === '0') {
+        this.user = res.data
+      }
+    })
+    this.getMatched()
+  },
+  watch: {
+    $route(to, form) {
+      this.breadList = this.$route.matched
+    }
+  },
+  methods: {
+    getMatched() {
+      this.breadList = this.$route.matched
+    },
+    info() {
+      this.$router.push("/person")
+    },
+    exit() {
+      this.$router.push("/login")
+    }
+  }
 }
 </script>
-
-<style scoped>
-
-.example-showcase .el-dropdown + .el-dropdown {
-  margin-left: 15px;
-}
-.example-showcase .el-dropdown-link {
-  cursor: pointer;
-  color: var(--el-color-primary);
-  display: flex;
-  align-items: center;
-}
-
-</style>

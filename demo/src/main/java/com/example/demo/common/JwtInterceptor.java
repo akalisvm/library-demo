@@ -1,55 +1,49 @@
 package com.example.demo.common;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.example.demo.entity.User;
-import com.example.demo.service.UserService;
+
+import com.auth0.jwt.exceptions.AlgorithmMismatchException;
+import com.auth0.jwt.exceptions.SignatureVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.example.demo.utils.JwtUtils;
-import org.springframework.util.StringUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
-public class TokenInterceptor implements HandlerInterceptor {
-
-    @Resource
-    private UserService userService;
+public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)  {
-        if(!(handler instanceof HandlerMethod)){
-            //所有非controller方法，都放行
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException {
+
+        if(!(handler instanceof HandlerMethod)) {
             return true;
         }
+
+        //获取请求头中的令牌
         String token = request.getHeader("token");
-        if(!StringUtils.hasLength(token)) {
-            return false;
+        Result<?> result;
+
+        try {
+            //验证令牌
+            return JwtUtils.verifyToken(token);
+        } catch (SignatureVerificationException e) {
+            result = Result.error("-1", "无效签名");
+        } catch (TokenExpiredException e) {
+            result = Result.error("-1", "token过期");
+        } catch (AlgorithmMismatchException e) {
+            result = Result.error("-1", "token算法不一致");
+        } catch (Exception e) {
+            result = Result.error("-1", "token无效");
         }
 
-        Integer userId = JWT.decode(token).getClaim("id").asInt();
-        //验证token
-        User user = userService.selectById(userId);
-        if(user == null) {
-            return false;
-        }
-        //用户密码加签验证
-        JWTVerifier verifier = JWT.require(Algorithm.HMAC256(user.getPassword())).build();
-        try {
-            verifier.verify(token);
-            String username = JwtUtils.getClaimByName(token, "username").asString();
-            String role = JwtUtils.getClaimByName(token, "role").asString();
-            request.setAttribute("username", username);
-            request.setAttribute("role", role);
-        } catch (JWTVerificationException e) {
-            return false;
-        }
-        //验证成功
-        return true;
+        //将Result转为json
+        String json = new ObjectMapper().writeValueAsString(result);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().println(json);
+        return false;
     }
 }
 
